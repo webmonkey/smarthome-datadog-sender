@@ -51,6 +51,7 @@ class Runner {
             $response = $hive->get("nodes");
         }
 
+
         if (200 != $response->info->http_code) {
             $this->_log("Failed to fetch Hive node data");
             $this->_log(print_r($response->response,true));
@@ -78,6 +79,14 @@ class Runner {
                 if (isset($node->attributes->stateHeatingRelay->reportedValue)) {
                     $metrics['hive.heatingRelay'] = $node->attributes->stateHeatingRelay->reportedValue == "ON" ? 1 : 0;
                 }
+
+                if (isset($node->attributes->temperature->reportedValue)) {
+                    $metrics['hive.temperature'] = $node->attributes->temperature->reportedValue;
+                }
+                if (isset($node->attributes->targetHeatTemperature->reportedValue)) {
+                    $metrics['hive.targetTemperature'] = $node->attributes->targetHeatTemperature->reportedValue;
+                }
+
             }
 
             $dataDog = new DatadogHelper($this->_config->datadogApiKey);
