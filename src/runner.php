@@ -2,6 +2,10 @@
 
 require(__DIR__ ."/../vendor/autoload.php");
 
+if (false == ini_get("date.timezone")) {
+    ini_set("date.timezone", "UTC");
+}
+
 $configFile = __DIR__ ."/../config/config.json";
 
 $runner = new Runner($configFile);
