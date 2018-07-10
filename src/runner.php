@@ -111,6 +111,7 @@ class Runner {
         $this->_config->hiveUsername = readLine("Hive username: ");
         $this->_config->hivePassword = readLine("Hive password: ");
         $this->_config->datadogApiKey = readLine("Datadog API key: ");
+        $this->_config->write();
     }
 
     private function _refreshHiveSession()
@@ -131,6 +132,7 @@ class Runner {
             $this->_log("Successfully fetched new Hive Session ID");
             $a = json_decode($response->response);
             $this->_config->hiveSessionId = $a->sessions[0]->id;
+            $this->_config->write();
         } else {
             $this->_log("Failed to fetch new Hive Session ID");
             $this->_log(print_r($response->response,true));
