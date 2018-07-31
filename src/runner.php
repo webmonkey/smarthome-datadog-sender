@@ -93,8 +93,11 @@ class Runner {
             }
         }
 
-        $weather = new HiveWeather($this->_config->countryCode, $this->_config->postCode);
-        $metrics["hive.outsideTemperature"] = $weather->getTemperature();
+        $weatherMap = new OpenWeatherMap($this->_config->openWeatherMapApiKey);
+        $metrics["openWeatherMap.temperature"] = $weatherMap->getTemperature($this->_config->cityName);
+
+        $hiveWeather = new HiveWeather();
+        $metrics["hive.outsideTemperature"] = $hiveWeather->getTemperature($this->_config->countryCode, $this->_config->postCode);
 
         if (count($metrics) > 0) {
             $this->_log("Sending data for ". count($metrics) ." metrics to Datadog");
@@ -118,6 +121,8 @@ class Runner {
         $this->_config->hiveUsername = readLine("Hive username: ");
         $this->_config->hivePassword = readLine("Hive password: ");
         $this->_config->datadogApiKey = readLine("Datadog API key: ");
+        $this->_config->openWeatherMapApiKey = readLine("OpenWeatherMap API key: ");
+        $this->_config->cityName = readLine("OpenWeatherMap City Name: ");
         $this->_config->countryCode = readLine("Country Code: ");
         $this->_config->postCode = readLine("Post Code: ");
         $this->_config->write();
@@ -159,24 +164,19 @@ class HiveWeather
 {
     protected $apiURL = "https://weather.prod.bgchprod.info";
 
-    public $country;
-    public $postCode;
-
-    public function __construct($country, $postCode)
+    public function __construct()
     {
-        $this->country = $country;
-        $this->postCode = $postCode;
     }
 
-    public function getTemperature()
+    public function getTemperature($country, $postCode)
     {
         $api = new RestClient([
             "base_url" => $this->apiURL
         ]);
 
         $response = $api->get("weather", [
-            "country" => $this->country,
-            "postcode" => $this->postCode 
+            "country" => $country,
+            "postcode" => $postCode 
         ]);
 
         if (200 == $response->info->http_code) {
@@ -185,6 +185,36 @@ class HiveWeather
         }
     }
 }
+
+class OpenWeatherMap
+{
+    protected $apiURL = "api.openweathermap.org/data/2.5";
+
+    private $_apiKey;
+
+    public function __construct($apiKey)
+    {
+        $this->_apiKey = $apiKey;
+    }
+
+    public function getTemperature($location)
+    {
+        $api = new RestClient([
+            "base_url" => $this->apiURL
+        ]);
+
+        $response = $api->get("weather", [
+            "q" => $location,
+            "units" => "metric",
+            "APPID" => $this->_apiKey
+        ]);
+        if (200 == $response->info->http_code) {
+            $a = json_decode($response->response);
+            return $a->main->temp;
+        }
+    }
+}
+
 
 
 class HiveApiFactory
