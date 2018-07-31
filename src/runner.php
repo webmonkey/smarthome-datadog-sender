@@ -65,7 +65,7 @@ class Runner {
             $metrics = array();
             foreach ($a->nodes as $node) {
 
-                if ($node->nodeType == "http://alertme.com/schema/json/node.class.light.json#") {
+                if (isset($node->nodeType) && $node->nodeType == "http://alertme.com/schema/json/node.class.light.json#") {
                     $lightStatus = $node->attributes->state->reportedValue;
                     $lightName = strtolower($node->name);
 
@@ -90,13 +90,20 @@ class Runner {
                 if (isset($node->attributes->targetHeatTemperature->reportedValue)) {
                     $metrics['hive.targetTemperature'] = $node->attributes->targetHeatTemperature->reportedValue;
                 }
-
             }
+        }
 
-            $dataDog = new DatadogHelper($this->_config->datadogApiKey);
+        $weather = new HiveWeather($this->_config->countryCode, $this->_config->postCode);
+        $metrics["hive.outsideTemperature"] = $weather->getTemperature();
+
+        if (count($metrics) > 0) {
             $this->_log("Sending data for ". count($metrics) ." metrics to Datadog");
+            $this->_log(json_encode($metrics));
+            $dataDog = new DatadogHelper($this->_config->datadogApiKey);
             $dataDog->sendMetrics($metrics);
         }
+
+
     }
 
     public function end()
@@ -111,6 +118,8 @@ class Runner {
         $this->_config->hiveUsername = readLine("Hive username: ");
         $this->_config->hivePassword = readLine("Hive password: ");
         $this->_config->datadogApiKey = readLine("Datadog API key: ");
+        $this->_config->countryCode = readLine("Country Code: ");
+        $this->_config->postCode = readLine("Post Code: ");
         $this->_config->write();
     }
 
@@ -143,6 +152,37 @@ class Runner {
     {
         $date = date("r");
         file_put_contents("php://stderr", "[$date] $message". PHP_EOL);
+    }
+}
+
+class HiveWeather
+{
+    protected $apiURL = "https://weather.prod.bgchprod.info";
+
+    public $country;
+    public $postCode;
+
+    public function __construct($country, $postCode)
+    {
+        $this->country = $country;
+        $this->postCode = $postCode;
+    }
+
+    public function getTemperature()
+    {
+        $api = new RestClient([
+            "base_url" => $this->apiURL
+        ]);
+
+        $response = $api->get("weather", [
+            "country" => $this->country,
+            "postcode" => $this->postCode 
+        ]);
+
+        if (200 == $response->info->http_code) {
+            $a = json_decode($response->response);
+            return $a->weather->temperature->value;
+        }
     }
 }
 
