@@ -65,7 +65,7 @@ class Runner {
             $metrics = array();
             foreach ($a->nodes as $node) {
 
-                if (isset($node->nodeType) && $node->nodeType == "http://alertme.com/schema/json/node.class.light.json#") {
+                if ($node->attributes->nodeType->reportedValue == "http://alertme.com/schema/json/node.class.light.json#") {
                     $lightStatus = $node->attributes->state->reportedValue;
                     $lightName = strtolower($node->name);
 
