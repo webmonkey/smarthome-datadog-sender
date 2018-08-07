@@ -1,0 +1,9 @@
+version: "3"
+services:
+    datadog-sender:
+        image: webmonkeyuk/smarthome-datadog-sender
+        volumes:
+            - hive-data-config:/usr/local/app/config
+
+volumes:
+    hive-data-config:
