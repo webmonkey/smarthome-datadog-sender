@@ -1,8 +1,8 @@
 build:
-	docker build -t hive-data .
+	docker build -t webmonkeyuk/smarthome-datadog-sender .
 
 run:
-	docker run --rm -it -v hive-data-config:/usr/local/app/config hive-data:latest
+	docker run --rm -it -v datadog-sender-config:/usr/local/app/config smarthome-datadog-sender:latest
 
 deploy:
 	docker stack deploy --compose-file docker-compose.yml smarthome-datadog-sender
