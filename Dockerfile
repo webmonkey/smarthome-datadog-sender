@@ -11,3 +11,4 @@ COPY src/ ./src
 RUN mkdir config
 VOLUME /usr/local/app/config
 CMD php ./src/runner.php
+HEALTHCHECK CMD /bin/sh ./src/heartbeat-check.sh

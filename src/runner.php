@@ -21,6 +21,7 @@ $runner->end();
 class Runner {
 
     private $_config;
+    private $_heartBeatFile = "/var/run/smarthome-datadog-sender";
 
     public function __construct($configFile)
     {
@@ -104,9 +105,10 @@ class Runner {
             $this->_log(json_encode($metrics));
             $dataDog = new DatadogHelper($this->_config->datadogApiKey);
             $dataDog->sendMetrics($metrics);
+
+            $this->_log("Touching $this->_heartBeatFile");
+            touch($this->_heartBeatFile);
         }
-
-
     }
 
     public function end()
@@ -272,6 +274,7 @@ class DatadogHelper
         if (202 != $response->info->http_code) {
             print_r($response->response);
         }
+
     }
 }
 
